@@ -8,11 +8,14 @@ public class BancoAlunos {
     }
 
     public void criarTabela() {
-        String sql = "CREATE TABLE IF NOT EXISTS alunos (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "nome TEXT NOT NULL," +
-                "idade INTEGER," +
-                "curso TEXT)";
+        String sql = """
+            CREATE TABLE IF NOT EXISTS alunos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                idade INTEGER,
+                curso TEXT
+            )
+            """;
 
         try (Connection conn = conectar();
              Statement stmt = conn.createStatement()) {
@@ -24,21 +27,20 @@ public class BancoAlunos {
     }
 
     public boolean salvar(Aluno aluno) {
-        String sql = "INSERT INTO alunos(nome, idade, curso) VALUES(?,?,?)";
+        String sql = "INSERT INTO alunos(nome, idade, curso) VALUES(?, ?, ?)";
 
         try (Connection conn = conectar();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, aluno.nome);
-            pstmt.setInt(2, aluno.idade);
-            pstmt.setString(3, aluno.curso);
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            pstmt.setString(1, aluno.getNome());
+            pstmt.setInt(2, aluno.getIdade());
+            pstmt.setString(3, aluno.getCurso());
             pstmt.executeUpdate();
 
 
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT last_insert_rowid()")) {
-                if (rs.next()) {
-                    aluno.id = rs.getInt(1);
-                }
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if (rs.next()) {
+                aluno.setId(rs.getInt(1));
             }
             return true;
         } catch (SQLException e) {
@@ -56,12 +58,13 @@ public class BancoAlunos {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Aluno a = new Aluno(
+                Aluno aluno = new Aluno(
                         rs.getString("nome"),
                         rs.getInt("idade"),
-                        rs.getString("curso"));
-                a.id = rs.getInt("id");
-                alunos.add(a);
+                        rs.getString("curso")
+                );
+                aluno.setId(rs.getInt("id"));
+                alunos.add(aluno);
             }
         } catch (SQLException e) {
             System.err.println("Erro ao listar alunos: " + e.getMessage());
@@ -75,14 +78,13 @@ public class BancoAlunos {
         try (Connection conn = conectar();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, aluno.nome);
-            pstmt.setInt(2, aluno.idade);
-            pstmt.setString(3, aluno.curso);
-            pstmt.setInt(4, aluno.id);
+            pstmt.setString(1, aluno.getNome());
+            pstmt.setInt(2, aluno.getIdade());
+            pstmt.setString(3, aluno.getCurso());
+            pstmt.setInt(4, aluno.getId());
 
             int linhasAfetadas = pstmt.executeUpdate();
             return linhasAfetadas > 0;
-
         } catch (SQLException e) {
             System.err.println("Erro ao atualizar aluno: " + e.getMessage());
             return false;
@@ -98,9 +100,8 @@ public class BancoAlunos {
             pstmt.setInt(1, id);
             int linhasAfetadas = pstmt.executeUpdate();
             return linhasAfetadas > 0;
-
         } catch (SQLException e) {
-            System.err.println("Erro de deletar aluno: " + e.getMessage());
+            System.err.println("Erro ao deletar aluno: " + e.getMessage());
             return false;
         }
     }

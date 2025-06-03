@@ -8,7 +8,7 @@ public class Main {
 
         File dbFile = new File("alunos.db");
         if (!dbFile.exists() || dbFile.length() == 0) {
-            System.out.println("Iniciadn bamco de dados.");
+            System.out.println("Iniciando banco de dados...");
             banco.criarTabela();
         }
 
@@ -40,9 +40,9 @@ public class Main {
 
                     Aluno novoAluno = new Aluno(nome, idade, curso);
                     if (banco.salvar(novoAluno)) {
-                        System.out.println("Aluno cadastrado com ID: " + novoAluno.id);
+                        System.out.println("Aluno cadastrado com ID: " + novoAluno.getId());
                     } else {
-                        System.out.println("Erroorr ao cadastrar aluno!");
+                        System.out.println("Erro ao cadastrar aluno!");
                     }
                     break;
 
@@ -53,7 +53,7 @@ public class Main {
                     } else {
                         System.out.println("\n--- LISTA DE ALUNOS ---");
                         for (Aluno a : alunos) {
-                            System.out.println(a.mostrar());
+                            System.out.println(a);
                         }
                     }
                     break;
@@ -74,7 +74,7 @@ public class Main {
                     String novoCurso = scanner.nextLine();
 
                     Aluno alunoEditado = new Aluno(novoNome, novaIdade, novoCurso);
-                    alunoEditado.id = idEditar;
+                    alunoEditado.setId(idEditar);
 
                     if (banco.atualizar(alunoEditado)) {
                         System.out.println("Aluno atualizado com sucesso!");
